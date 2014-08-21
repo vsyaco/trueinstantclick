@@ -1,8 +1,30 @@
+# TrueInstantClick
+
+__*First of all currently it's in development, hasn't been tested yet and probably won't work. So, you know, don't use in production and anywhere else.*__
+
 ## InstantClick
 
 For information about what InstantClick is, how it works, etc., go to **[InstantClick’s website](http://instantclick.io/)**.
 
-## Contributing
+## Difference between TrueInstantClick and InstantClick
+
+While InstantClick offers many options like how to preload pages and progress bar, most developers don't use all it's functionality. So rather than ship ~~tons~~ kilobytes of useless code with poor performance I chose only most important parts of it and here they are:
+
+- Preload only on click. This option saves lots of requests and doesn't broke anything.
+- No blacklists and whitelists. Since we're preloading on click they are useless anyway.
+- No progressbar
+
+With this, TrueInstantClick is up to 50% smaller than InstantClick, has better performance and still works the same way as intended.
+
+## Installation
+
+Add this line before ``</body>`` tag:
+
+    <script src="instantclick.js"></script>
+
+and enjoy.
+
+## Contributing to InstantClick
 
 ### Pull Requests
 

@@ -1,12 +1,11 @@
-/* InstantClick 3.0.1 | (C) 2014 Alexandre Dieulot | http://instantclick.io/license.html */
+/* InstantClick 3.0.1 | (C) 2014 Alexandre Dieulot | (C) 2014 kexek | http://instantclick.io/license.html */
 
 var InstantClick = function(document, location) {
   // Internal variables
   var $ua = navigator.userAgent,
       $hasTouch = 'createTouch' in document,
       $currentLocationWithoutHash,
-      $urlToPreload,
-      $preloadTimer,
+      $urlToPreload
 
   // Preloading-related variables
       $history = {},
@@ -21,9 +20,6 @@ var InstantClick = function(document, location) {
       $trackedAssets = [],
 
   // Variables defined by public functions
-      $useWhitelist,
-      $preloadOnMousedown,
-      $delayBeforePreload,
       $eventsCallbacks = {
         fetch: [],
         receive: [],
@@ -48,38 +44,6 @@ var InstantClick = function(document, location) {
       target = target.parentNode
     }
     return target
-  }
-
-  function isBlacklisted(elem) {
-    do {
-      if (!elem.hasAttribute) { // Parent of <html>
-        break
-      }
-      if (elem.hasAttribute('data-instant')) {
-        return false
-      }
-      if (elem.hasAttribute('data-no-instant')) {
-        return true
-      }
-    }
-    while (elem = elem.parentNode);
-    return false
-  }
-
-  function isWhitelisted(elem) {
-    do {
-      if (!elem.hasAttribute) { // Parent of <html>
-        break
-      }
-      if (elem.hasAttribute('data-no-instant')) {
-        return false
-      }
-      if (elem.hasAttribute('data-instant')) {
-        return true
-      }
-    }
-    while (elem = elem.parentNode);
-    return false
   }
 
   function triggerPageEvent(eventType, arg1) {
@@ -121,7 +85,6 @@ var InstantClick = function(document, location) {
       scrollTo(0, scrollY)
     }
     instantanize()
-    bar.done()
     triggerPageEvent('change', false)
   }
 
@@ -130,25 +93,10 @@ var InstantClick = function(document, location) {
     $isWaitingForCompletion = false
   }
 
-
   ////////// EVENT HANDLERS //////////
-
 
   function mousedown(e) {
     preload(getLinkTarget(e.target).href)
-  }
-
-  function mouseover(e) {
-    var a = getLinkTarget(e.target)
-    a.addEventListener('mouseout', mouseout)
-
-    if (!$delayBeforePreload) {
-      preload(a.href)
-    }
-    else {
-      $urlToPreload = a.href
-      $preloadTimer = setTimeout(preload, $delayBeforePreload)
-    }
   }
 
   function touchstart(e) {
@@ -168,20 +116,6 @@ var InstantClick = function(document, location) {
     }
     e.preventDefault()
     display(getLinkTarget(e.target).href)
-  }
-
-  function mouseout() {
-    if ($preloadTimer) {
-      clearTimeout($preloadTimer)
-      $preloadTimer = false
-      return
-    }
-
-    if (!$isPreloading || $isWaitingForCompletion) {
-      return
-    }
-    $xhr.abort()
-    setPreloadingAsHalted()
   }
 
   function readystatechange() {
@@ -238,9 +172,7 @@ var InstantClick = function(document, location) {
     }
   }
 
-
   ////////// MAIN FUNCTIONS //////////
-
 
   function instantanize(isInitializing) {
     var as = document.getElementsByTagName('a'),
@@ -254,19 +186,11 @@ var InstantClick = function(document, location) {
           || a.href.indexOf(domain + '/') != 0 // Another domain, or no href attribute
           || (a.href.indexOf('#') > -1
               && removeHash(a.href) == $currentLocationWithoutHash) // Anchor
-          || ($useWhitelist
-              ? !isWhitelisted(a)
-              : isBlacklisted(a))
          ) {
         continue
       }
       a.addEventListener('touchstart', touchstart)
-      if ($preloadOnMousedown) {
-        a.addEventListener('mousedown', mousedown)
-      }
-      else {
-        a.addEventListener('mouseover', mouseover)
-      }
+      a.addEventListener('mousedown', mousedown)
       a.addEventListener('click', click)
     }
     if (!isInitializing) {
@@ -278,9 +202,6 @@ var InstantClick = function(document, location) {
 
       for (i = 0, j = scripts.length; i < j; i++) {
         script = scripts[i]
-        if (script.hasAttribute('data-no-instant')) {
-          continue
-        }
         copy = document.createElement('script')
         if (script.src) {
           copy.src = script.src
@@ -321,10 +242,6 @@ var InstantClick = function(document, location) {
 
       return
     }
-    if ($preloadTimer) {
-      clearTimeout($preloadTimer)
-      $preloadTimer = false
-    }
 
     if (!url) {
       url = $urlToPreload
@@ -350,25 +267,6 @@ var InstantClick = function(document, location) {
   function display(url) {
     if (!('display' in $timing)) {
       $timing.display = +new Date - $timing.start
-    }
-    if ($preloadTimer) {
-      /* Happens when there’s a delay before preloading and that delay
-         hasn't expired (preloading didn't kick in).
-      */
-
-      if ($url && $url != url) {
-        /* Happens when the user clicks on a link before preloading
-           kicks in while another link is already preloading.
-        */
-
-        location.href = url
-        return
-      }
-      preload(url)
-      bar.start(0, true)
-      triggerPageEvent('wait')
-      $isWaitingForCompletion = true
-      return
     }
     if (!$isPreloading || $isWaitingForCompletion) {
       /* If the page isn't preloaded, it likely means the user has focused
@@ -398,7 +296,6 @@ var InstantClick = function(document, location) {
       return
     }
     if (!$body) {
-      bar.start(0, true)
       triggerPageEvent('wait')
       $isWaitingForCompletion = true
       return
@@ -407,145 +304,6 @@ var InstantClick = function(document, location) {
     setPreloadingAsHalted()
     changePage($title, $body, $url)
   }
-
-
-  ////////// PROGRESS BAR FUNCTIONS //////////
-
-
-  var bar = function() {
-    var $barContainer,
-        $barElement,
-        $barTransformProperty,
-        $barProgress,
-        $barTimer
-
-    function init() {
-      $barContainer = document.createElement('div')
-      $barContainer.id = 'instantclick'
-      $barElement = document.createElement('div')
-      $barElement.id = 'instantclick-bar'
-      $barElement.className = 'instantclick-bar'
-      $barContainer.appendChild($barElement)
-
-      var vendors = ['Webkit', 'Moz', 'O']
-
-      $barTransformProperty = 'transform'
-      if (!($barTransformProperty in $barElement.style)) {
-        for (var i = 0; i < 3; i++) {
-          if (vendors[i] + 'Transform' in $barElement.style) {
-            $barTransformProperty = vendors[i] + 'Transform'
-          }
-        }
-      }
-
-      var transitionProperty = 'transition'
-      if (!(transitionProperty in $barElement.style)) {
-        for (var i = 0; i < 3; i++) {
-          if (vendors[i] + 'Transition' in $barElement.style) {
-            transitionProperty = '-' + vendors[i].toLowerCase() + '-' + transitionProperty
-          }
-        }
-      }
-
-      var style = document.createElement('style')
-      style.innerHTML = '#instantclick{position:' + ($hasTouch ? 'absolute' : 'fixed') + ';top:0;left:0;width:100%;pointer-events:none;z-index:2147483647;' + transitionProperty + ':opacity .25s .1s}'
-        + '.instantclick-bar{background:#29d;width:100%;margin-left:-100%;height:2px;' + transitionProperty + ':all .25s}'
-      /* We set the bar's background in `.instantclick-bar` so that it can be
-         overriden in CSS with `#instantclick-bar`, as IDs have higher priority.
-      */
-      document.head.appendChild(style)
-
-      if ($hasTouch) {
-        updatePositionAndScale()
-        addEventListener('resize', updatePositionAndScale)
-        addEventListener('scroll', updatePositionAndScale)
-      }
-
-    }
-
-    function start(at, jump) {
-      $barProgress = at
-      if (document.getElementById($barContainer.id)) {
-        document.body.removeChild($barContainer)
-      }
-      $barContainer.style.opacity = '1'
-      if (document.getElementById($barContainer.id)) {
-        document.body.removeChild($barContainer)
-        /* So there's no CSS animation if already done once and it goes from 1 to 0 */
-      }
-      update()
-      if (jump) {
-        setTimeout(jumpStart, 0)
-        /* Must be done in a timer, otherwise the CSS animation doesn't happen. */
-      }
-      clearTimeout($barTimer)
-      $barTimer = setTimeout(inc, 500)
-    }
-
-    function jumpStart() {
-      $barProgress = 10
-      update()
-    }
-
-    function inc() {
-      $barProgress += 1 + (Math.random() * 2)
-      if ($barProgress >= 98) {
-        $barProgress = 98
-      }
-      else {
-        $barTimer = setTimeout(inc, 500)
-      }
-      update()
-    }
-
-    function update() {
-      $barElement.style[$barTransformProperty] = 'translate(' + $barProgress + '%)'
-      if (!document.getElementById($barContainer.id)) {
-        document.body.appendChild($barContainer)
-      }
-    }
-
-    function done() {
-      if (document.getElementById($barContainer.id)) {
-        clearTimeout($barTimer)
-        $barProgress = 100
-        update()
-        $barContainer.style.opacity = '0'
-        /* If you're debugging, setting this to 0.5 is handy. */
-        return
-      }
-
-      /* The bar container hasn't been appended: It's a new page. */
-      start($barProgress == 100 ? 0 : $barProgress)
-      /* $barProgress is 100 on popstate, usually. */
-      setTimeout(done, 0)
-      /* Must be done in a timer, otherwise the CSS animation doesn't happen. */
-    }
-
-    function updatePositionAndScale() {
-      /* Adapted from code by Sam Stephenson and Mislav Marohnić
-         http://signalvnoise.com/posts/2407
-      */
-
-      $barContainer.style.left = pageXOffset + 'px'
-      $barContainer.style.width = innerWidth + 'px'
-      $barContainer.style.top = pageYOffset + 'px'
-
-      var landscape = 'orientation' in window && Math.abs(orientation) == 90,
-          scaleY = innerWidth / screen[landscape ? 'height' : 'width'] * 2
-      /* We multiply the size by 2 because the progress bar is harder
-         to notice on a mobile device.
-      */
-      $barContainer.style[$barTransformProperty] = 'scaleY(' + scaleY  + ')'
-    }
-
-    return {
-      init: init,
-      start: start,
-      done: done
-    }
-  }()
-
 
   ////////// PUBLIC VARIABLE AND FUNCTIONS //////////
 
@@ -591,18 +349,8 @@ var InstantClick = function(document, location) {
       triggerPageEvent('change', true)
       return
     }
-    for (var i = arguments.length - 1; i >= 0; i--) {
-      var arg = arguments[i]
-      if (arg === true) {
-        $useWhitelist = true
-      }
-      else if (arg == 'mousedown') {
-        $preloadOnMousedown = true
-      }
-      else if (typeof arg == 'number') {
-        $delayBeforePreload = arg
-      }
-    }
+
+    $preloadOnMousedown = true
     $currentLocationWithoutHash = removeHash(location.href)
     $history[$currentLocationWithoutHash] = {
       body: document.body,
@@ -629,8 +377,6 @@ var InstantClick = function(document, location) {
 
     instantanize(true)
 
-    bar.init()
-
     triggerPageEvent('change', true)
 
     addEventListener('popstate', function() {
@@ -656,38 +402,8 @@ var InstantClick = function(document, location) {
     $eventsCallbacks[eventType].push(callback)
   }
 
-
-  /* The debug function isn't included by default to reduce file size.
-     To enable it, add a slash at the beginning of the comment englobing
-     the debug function, and uncomment "debug: debug," in the return
-     statement below the function. */
-
-  /*
-  function debug() {
-    return {
-      currentLocationWithoutHash: $currentLocationWithoutHash,
-      history: $history,
-      xhr: $xhr,
-      url: $url,
-      title: $title,
-      mustRedirect: $mustRedirect,
-      body: $body,
-      timing: $timing,
-      isPreloading: $isPreloading,
-      isWaitingForCompletion: $isWaitingForCompletion
-    }
-  }
-  //*/
-
-
   ////////////////////
 
-
-  return {
-    // debug: debug,
-    supported: supported,
-    init: init,
-    on: on
-  }
+  return init()
 
 }(document, location);

@@ -1,7 +1,7 @@
 {
-  "name": "instantclick",
-  "description": "InstantClick makes following links in your website instant.",
-  "version": "3.0.1",
+  "name": "trueinstantclick",
+  "description": "TrueInstantClick makes following links in your website instant.",
+  "version": "4.0.1",
   "main": [
     "./instantclick.js"
   ],
@@ -9,5 +9,5 @@
   "keywords": [
     "pjax"
   ],
-  "homepage": "http://instantclick.io/"
+  "homepage": "http://github.com/kexek/trueinstantclick/"
 }
