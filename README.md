@@ -1,6 +1,6 @@
 # TrueInstantClick
 
-__*First of all currently it's in development, hasn't been tested yet and probably won't work. So, you know, don't use in production and anywhere else.*__
+__*Currently it's in development, but should work. Test before use in production.*__
 
 ## InstantClick
 
