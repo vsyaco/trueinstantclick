@@ -1,11 +1,11 @@
 all:
-	@head -1 instantclick.js > min.head.js
-	@curl --silent --data "output_info=compiled_code" --data-urlencode "js_code@instantclick.js" "http://closure-compiler.appspot.com/compile" -o min.code.js
-	@cat min.head.js min.code.js > instantclick.min.js
+	@head -1 trueinstantclick.js > min.head.js
+	@curl --silent --data "output_info=compiled_code" --data-urlencode "js_code@trueinstantclick.js" "http://closure-compiler.appspot.com/compile" -o min.code.js
+	@cat min.head.js min.code.js > trueinstantclick.min.js
 	@rm min.head.js min.code.js
-	@gzip instantclick.min.js
-	@du -b instantclick.js instantclick.min.js.gz
-	@gunzip instantclick.min.js.gz
+	@gzip trueinstantclick.min.js
+	@du -b trueinstantclick.js trueinstantclick.min.js.gz
+	@gunzip trueinstantclick.min.js.gz
 
 clean:
 	@rm instantclick.min.js

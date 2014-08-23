@@ -20,7 +20,7 @@ With this, TrueInstantClick is up to 50% smaller than InstantClick, has better p
 
 Add this line before ``</body>`` tag:
 
-    <script src="instantclick.js"></script>
+    <script src="trueinstantclick.js"></script>
 
 and enjoy.
 

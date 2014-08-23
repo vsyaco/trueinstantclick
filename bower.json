@@ -3,7 +3,7 @@
   "description": "TrueInstantClick makes following links in your website instant.",
   "version": "4.0.1",
   "main": [
-    "./instantclick.js"
+    "./trueinstantclick.js"
   ],
   "license": "MIT",
   "keywords": [
